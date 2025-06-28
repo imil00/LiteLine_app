@@ -54,9 +54,6 @@ dependencies:
   # Animations
   animations: ^2.0.8
   lottie: ^2.7.0
-  
-#video
-  video_player: ^2.7.0
 
 dev_dependencies:
   flutter_test:
@@ -73,9 +70,3 @@ flutter:
     - assets/images/backgrounds/
     - assets/database/
   
-  fonts:
-    - family: LineFont
-      fonts:
-        - asset: assets/fonts/line_fonts/regular.ttf
-        - asset: assets/fonts/line_fonts/bold.ttf
-          weight: 700
