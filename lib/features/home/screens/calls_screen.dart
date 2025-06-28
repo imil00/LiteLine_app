@@ -127,7 +127,7 @@ class _CallsScreenState extends State<CallsScreen> {
                       Icon(icon, size: 16, color: iconColor),
                       const SizedBox(width: 4),
                       Text(
-                        '${AppDateUtils.formatDetailedChatTimestamp(call['timestamp'])}$durationText',
+                        '${AppDateUtils.formatLastSeen(call['timestamp'])}$durationText',
                         style: AppTextStyles.bodySmall,
                       ),
                     ],

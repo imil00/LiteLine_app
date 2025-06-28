@@ -54,6 +54,7 @@ dependencies:
   # Animations
   animations: ^2.0.8
   lottie: ^2.7.0
+  
 #video
   video_player: ^2.7.0
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:Maps_flutter/Maps_flutter.dart';
 import 'package:liteline_app/core/constants/app_colors.dart';
 import 'package:liteline_app/core/constants/app_text_styles.dart';
 import 'package:liteline_app/core/services/location_service.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 
 class LocationPickerScreen extends StatefulWidget {
   const LocationPickerScreen({super.key});
@@ -28,18 +30,20 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     setState(() {
       _isLoading = true;
     });
-    final bool permissionGranted = await _locationService.requestLocationPermission();
-    if (!permissionGranted) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission denied.')),
-        );
-      }
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
+final permission = await _locationService.requestLocationPermission();
+if (permission == LocationPermission.denied ||
+    permission == LocationPermission.deniedForever) {
+  if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Location permission denied.')),
+    );
+  }
+  setState(() {
+    _isLoading = false;
+  });
+  return;
+}
+
 
     final bool serviceEnabled = await _locationService.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -54,7 +58,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       return;
     }
 
-    final position = await _locationService.getCurrentLocation();
+    final position = await _locationService.getCurrentPosition();
     if (position != null) {
       setState(() {
         _selectedLocation = LatLng(position.latitude, position.longitude);

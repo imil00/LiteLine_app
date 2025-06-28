@@ -92,7 +92,7 @@ class _MessageInputState extends State<MessageInput> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-      color: Theme.of(context).bottomAppBarColor,
+      color: AppColors.backgroundColor,
       child: Row(
         children: [
           IconButton(

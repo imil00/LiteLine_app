@@ -5,6 +5,7 @@ import '../../../core/database/database_helper.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../features/home/widgets/chat_item.dart';
 import '../../chat/screens/chat_room_screen.dart';
+import '../../../core/database/models/chat_model.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -145,7 +146,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ],
               ),
             ),
-          
+
           // Chat list
           Expanded(
             child: _isLoading
@@ -160,7 +161,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                             final chat = _chats[index];
                             final chatId = chat['chat_id'];
                             final isSelected = _selectedChats.contains(chatId);
-                            
+
                             return ChatItem(
                               chat: chat,
                               isSelected: isSelected,
@@ -173,8 +174,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => ChatRoomScreen(
-                                        chatId: chatId,
-                                        chatName: chat['chat_name'] ?? 'Chat',
+                                        chat: ChatModel.fromMap(chat),
                                       ),
                                     ),
                                   );

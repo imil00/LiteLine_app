@@ -10,6 +10,47 @@ class LocationService {
 
   final loc.Location _location = loc.Location();
 
+  // Tambahkan method ini ke class LocationService
+
+// Method untuk mendapatkan alamat dari koordinat
+Future<String> getLocationAddress(dynamic location) async {
+  try {
+    double latitude, longitude;
+    
+    // Handle berbagai tipe input (LatLng, Position, dll)
+    if (location is Position) {
+      latitude = location.latitude;
+      longitude = location.longitude;
+    } else if (location.runtimeType.toString().contains('LatLng')) {
+      // Jika menggunakan LatLng dari google_maps_flutter
+      latitude = location.latitude;
+      longitude = location.longitude;
+    } else if (location is Map) {
+      latitude = location['latitude'];
+      longitude = location['longitude'];
+    } else {
+      throw Exception('Invalid location type');
+    }
+
+    // Untuk sementara return koordinat sebagai string
+    // Untuk mendapat alamat asli, Anda perlu package geocoding
+    return 'Location: ${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}';
+    
+    // Jika menggunakan package geocoding:
+    /*
+    List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+    if (placemarks.isNotEmpty) {
+      Placemark place = placemarks[0];
+      return '${place.street}, ${place.locality}, ${place.country}';
+    }
+    return 'Unknown Location';
+    */
+  } catch (e) {
+    print('Error getting location address: $e');
+    return 'Unknown Location';
+  }
+}
+
   // Check if location services are enabled
   Future<bool> isLocationServiceEnabled() async {
     try {

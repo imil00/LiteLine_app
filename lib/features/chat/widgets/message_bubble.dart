@@ -1,14 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:liteline_app/core/constants/app_colors.dart';
 import 'package:liteline_app/core/constants/app_text_styles.dart';
 import 'package:liteline_app/core/database/models/message_model.dart';
 import 'package:liteline_app/core/utils/date_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:Maps_flutter/Maps_flutter.dart';
+import '../../../core/services/file_service.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:liteline_app/features/media/screens/media_viewer_screen.dart'; // For media preview
 
 class MessageBubble extends StatelessWidget {
-  final Message message;
+  final MessageModel message;
   final bool isMe;
   final bool isSelected; // For multi-select mode
 
@@ -116,7 +119,7 @@ class MessageBubble extends StatelessWidget {
                     ),
                     Text(
                       '${(message.fileSize ?? 0) / 1024 / 1024} MB', // Convert bytes to MB
-                      style: AppTextStyles.caption.copyWith(
+                      style: AppTextStyles.bodySmall.copyWith(
                         color: isMe ? AppColors.textWhite.withOpacity(0.7) : AppColors.textLight,
                       ),
                     ),
@@ -243,7 +246,7 @@ class MessageBubble extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  AppDateUtils.formatTime(message.timestamp),
+                  AppDateUtils.formatTimeOnly(message.timestamp),
                   style: AppTextStyles.chatTimestamp.copyWith(
                     color: isMe ? AppColors.textWhite.withOpacity(0.8) : AppColors.textLight,
                   ),

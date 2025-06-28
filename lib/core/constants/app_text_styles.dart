@@ -191,4 +191,32 @@ static const TextStyle buttonLarge = TextStyle(
     color: AppColors.textWhite,
     height: 1.2,
   );
+
+  //Time
+
+  static const TextStyle chatSenderName = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.bold,
+    color: AppColors.primaryGreen,
+    height: 1.3,
+  );
+
+  static const TextStyle chatTimestamp = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textLight,
+    height: 1.2,
+  );
+
+static const TextStyle buttonTextStyle = TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.w600,
+  color: AppColors.textWhite,
+  height: 1.3,
+);
+
+
 }
+
+
+

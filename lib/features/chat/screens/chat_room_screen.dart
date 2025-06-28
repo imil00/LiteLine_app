@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'dart:io'; // Add this import for File class
+import 'package:path/path.dart' as p; // Add this import for path operations
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // Add this for LatLng
 import 'package:liteline_app/core/constants/app_colors.dart';
 import 'package:liteline_app/core/constants/app_text_styles.dart';
 import 'package:liteline_app/core/database/models/chat_model.dart';
 import 'package:liteline_app/core/database/models/message_model.dart';
 import 'package:liteline_app/core/database/database_helper.dart';
 import 'package:liteline_app/core/services/auth_service.dart';
-import 'package:liteline_app/core/utils/date_utils.dart';
+import 'package:liteline_app/core/services/location_service.dart'; // Add this import
+import '../../../core/utils/date_utils.dart';
 import 'package:liteline_app/features/chat/widgets/message_bubble.dart';
 import 'package:liteline_app/features/chat/widgets/message_input.dart';
 import 'package:liteline_app/features/chat/widgets/attachment_picker.dart';
 import 'package:liteline_app/features/chat/widgets/location_picker.dart';
+import 'package:flutter/material.dart' show DateUtils;
+import 'package:geolocator/geolocator.dart';
+import 'package:liteline_app/core/services/location_service.dart';
+
 import '../../../features/media/screens/camera_screen.dart';
 import '../../../core/services/file_service.dart';
 import '../../../core/constants/app_constants.dart';
@@ -32,7 +40,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   List<MessageModel> _messages = [];
   int? _currentUserId;
   bool _isMultiSelectMode = false;
-  final Set<String> _selectedMessageIds = {}; // Set to store selected message IDs
+  final Set<String> _selectedMessageIds =
+      {}; // Set to store selected message IDs
 
   @override
   void initState() {
@@ -100,7 +109,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       longitude: longitude,
       isSent: true, // Assuming local sending is always successful
       isDelivered: true, // Assuming local delivery is always successful
-      timestamp: DateTime.now().millisecondsSinceEpoch,
+      timestamp: DateTime.now(),
     );
 
     await _dbHelper.insertMessage(newMessage.toMap());
@@ -126,7 +135,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Messages'),
-        content: Text('Are you sure you want to delete ${_selectedMessageIds.length} selected messages?'),
+        content: Text(
+            'Are you sure you want to delete ${_selectedMessageIds.length} selected messages?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -134,7 +144,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child:
+                const Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -148,7 +159,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       });
       _loadMessages(); // Reload messages to update UI
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${_selectedMessageIds.length} messages deleted.')),
+        SnackBar(
+            content: Text('${_selectedMessageIds.length} messages deleted.')),
       );
     }
   }
@@ -157,12 +169,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.chat.chatName ?? 'Unknown Chat', style: AppTextStyles.appBarTitle),
+        title: Text(widget.chat.chatName ?? 'Unknown Chat',
+            style: AppTextStyles.appBarTitle),
         centerTitle: false,
         actions: _isMultiSelectMode
             ? [
                 IconButton(
-                  icon: const Icon(Icons.delete_forever, color: AppColors.error),
+                  icon:
+                      const Icon(Icons.delete_forever, color: AppColors.error),
                   onPressed: _deleteSelectedMessages,
                 ),
                 IconButton(
@@ -191,7 +205,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => ChatSettingsScreen(chat: widget.chat)),
+                          builder: (context) =>
+                              ChatSettingsScreen(chat: widget.chat)),
                     );
                   },
                 ),
@@ -210,23 +225,24 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             Expanded(
               child: ListView.builder(
                 reverse: true, // Show latest messages at the bottom
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
-                  final message = _messages[_messages.length - 1 - index]; // Display in correct order
+                  final message = _messages[
+                      _messages.length - 1 - index]; // Display in correct order
                   final bool isMe = message.senderId == _currentUserId;
-                  final bool isSelected = _selectedMessageIds.contains(message.messageId);
+                  final bool isSelected =
+                      _selectedMessageIds.contains(message.messageId);
 
                   // Group messages by date
                   final bool showDateHeader;
-                  if (index == _messages.length - 1) { // First message in reversed list is the oldest
+                  if (index == _messages.length - 1) {
                     showDateHeader = true;
                   } else {
-                    final prevMessage = _messages[_messages.length - index]; // Access previous message
-                    showDateHeader = !DateUtils.isSameDay(
-                      DateTime.fromMillisecondsSinceEpoch(message.timestamp),
-                      DateTime.fromMillisecondsSinceEpoch(prevMessage.timestamp),
-                    );
+                    final messageDate = _messages[_messages.length - 1 - index].timestamp;
+                    final prevMessageDate = _messages[_messages.length - index].timestamp;
+                    showDateHeader = !AppDateUtils.isSameDay(messageDate, prevMessageDate);
                   }
 
                   return Column(
@@ -236,14 +252,18 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Chip(
                             label: Text(
-                              AppDateUtils.formatChatTimestamp(message.timestamp),
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textWhite),
+                              AppDateUtils.formatMessageTime(
+                                  message.timestamp),
+                              style: AppTextStyles.bodySmall
+                                  .copyWith(color: AppColors.textWhite),
                             ),
-                            backgroundColor: AppColors.textLight.withOpacity(0.7),
+                            backgroundColor:
+                                AppColors.textLight.withOpacity(0.7),
                           ),
                         ),
                       GestureDetector(
-                        onLongPress: () => _toggleMultiSelect(message.messageId),
+                        onLongPress: () =>
+                            _toggleMultiSelect(message.messageId),
                         onTap: _isMultiSelectMode
                             ? () => _toggleMultiSelect(message.messageId)
                             : null,
@@ -265,19 +285,28 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 if (type == 'camera') {
                   final result = await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const CameraScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const CameraScreen()),
                   );
                   if (result != null && result is String) {
                     // result is a file path of the captured image/video
                     final File file = File(result);
                     final String fileName = p.basename(file.path);
                     final int fileSize = await file.length();
-                    final String messageType = result.toLowerCase().endsWith('.mp4') ? 'video' : 'image';
-                    final String? savedPath = await FileService().saveFile(file, messageType == 'image' ? AppConstants.imagesPath : AppConstants.videosPath);
+                    final String messageType =
+                        result.toLowerCase().endsWith('.mp4')
+                            ? 'video'
+                            : 'image';
+                    final String? savedPath = await FileService().saveFile(
+                        file,
+                        messageType == 'image'
+                            ? AppConstants.imagesPath
+                            : AppConstants.videosPath);
                     if (savedPath != null) {
-                       final String? thumbnailPath = await FileService().createThumbnail(savedPath, messageType);
-                       _sendMessage(
-                        content: '', // No text content for media
+                      final String? thumbnailPath = await FileService()
+                          .createThumbnail(savedPath, messageType);
+                      _sendMessage(
+                        content: '', 
                         messageType: messageType,
                         filePath: savedPath,
                         fileName: fileName,
@@ -300,18 +329,28 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     String subDirectory;
 
                     if (type == 'gallery') {
-                      messageType = result.files.single.extension!.toLowerCase().contains('mp4') ? 'video' : 'image';
-                      subDirectory = messageType == 'image' ? AppConstants.imagesPath : AppConstants.videosPath;
-                    } else { // type == 'file'
+                      messageType = result.files.single.extension!
+                              .toLowerCase()
+                              .contains('mp4')
+                          ? 'video'
+                          : 'image';
+                      subDirectory = messageType == 'image'
+                          ? AppConstants.imagesPath
+                          : AppConstants.videosPath;
+                    } else {
+                      // type == 'file'
                       messageType = 'file';
                       subDirectory = AppConstants.documentsPath;
                     }
-                    
-                    final String? savedPath = await FileService().saveFile(file, subDirectory);
+
+                    final String? savedPath =
+                        await FileService().saveFile(file, subDirectory);
                     if (savedPath != null) {
-                      final String? thumbnailPath = await FileService().createThumbnail(savedPath, messageType);
+                      final String? thumbnailPath = await FileService()
+                          .createThumbnail(savedPath, messageType);
                       _sendMessage(
-                        content: fileName, // Content for files can be the filename
+                        content:
+                            fileName, 
                         messageType: messageType,
                         filePath: savedPath,
                         fileName: fileName,
@@ -329,12 +368,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               onShareLocation: () async {
                 final LatLng? selectedLocation = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const LocationPickerScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const LocationPickerScreen()),
                 );
                 if (selectedLocation != null) {
-                  final String address = await LocationService().getLocationAddress(selectedLocation);
+                  final String address = await LocationService()
+                      .getLocationAddress(selectedLocation);
                   _sendMessage(
-                    content: address, // Or a more structured address string
+                    content: address,
                     messageType: 'location',
                     latitude: selectedLocation.latitude,
                     longitude: selectedLocation.longitude,

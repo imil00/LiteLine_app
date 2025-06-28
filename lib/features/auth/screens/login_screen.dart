@@ -185,6 +185,7 @@ class _LoginScreenState extends State<LoginScreen>
                     children: [
                       CustomTextField(
                         controller: _usernameController,
+                        labelText: 'Username or Email',
                         hintText: 'Username or Email',
                         prefixIcon: Icons.person_outline,
                         validator: (value) {
@@ -199,6 +200,7 @@ class _LoginScreenState extends State<LoginScreen>
                       
                       CustomTextField(
                         controller: _passwordController,
+                        labelText: 'Password',
                         hintText: 'Password',
                         prefixIcon: Icons.lock_outline,
                         obscureText: _obscurePassword,

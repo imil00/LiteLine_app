@@ -14,6 +14,46 @@ class FileService {
   final ImagePicker _imagePicker = ImagePicker();
   final StorageService _storageService = StorageService();
 
+Future<String?> saveFile(File file, String subDirectory) async {
+  return await saveFileToAppDirectory(file, _getMessageTypeFromDirectory(subDirectory));
+}
+
+// Helper method untuk mapping directory ke message type
+String _getMessageTypeFromDirectory(String directory) {
+  switch (directory.toLowerCase()) {
+    case 'images':
+      return 'image';
+    case 'videos':
+      return 'video';
+    case 'audio':
+      return 'audio';
+    case 'documents':
+      return 'file';
+    default:
+      return 'file';
+  }
+}
+
+Future<String?> createThumbnail(String filePath, String messageType) async {
+  try {
+    if (messageType == 'video') {
+      // Untuk video, Anda perlu package video_thumbnail
+      // return await createVideoThumbnail(File(filePath));
+      
+      // Sementara return null jika belum implement video thumbnail
+      return null;
+    } else if (messageType == 'image') {
+      // Untuk image, bisa menggunakan image yang sama atau buat versi kecil
+      // Sementara return path yang sama
+      return filePath;
+    }
+    return null;
+  } catch (e) {
+    print('Error creating thumbnail: $e');
+    return null;
+  }
+}
+
   // Image picker methods
   Future<File?> pickImageFromCamera() async {
     try {
@@ -153,6 +193,7 @@ class FileService {
       return [];
     }
   }
+
 
   // Save file to app directory
   Future<String?> saveFileToAppDirectory(File file, String messageType) async {
