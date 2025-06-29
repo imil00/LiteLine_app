@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'dart:io'; // Add this import for File class
-import 'package:path/path.dart' as p; // Add this import for path operations
-import 'package:google_maps_flutter/google_maps_flutter.dart'; // Add this for LatLng
+import 'dart:io'; 
+import 'package:path/path.dart' as p; 
+import 'package:google_maps_flutter/google_maps_flutter.dart'; 
 import 'package:liteline_app/core/constants/app_colors.dart';
 import 'package:liteline_app/core/constants/app_text_styles.dart';
 import 'package:liteline_app/core/database/models/chat_model.dart';
 import 'package:liteline_app/core/database/models/message_model.dart';
 import 'package:liteline_app/core/database/database_helper.dart';
 import 'package:liteline_app/core/services/auth_service.dart';
-import 'package:liteline_app/core/services/location_service.dart'; // Add this import
+import 'package:liteline_app/core/services/location_service.dart'; 
 import '../../../core/utils/date_utils.dart';
 import 'package:liteline_app/features/chat/widgets/message_bubble.dart';
 import 'package:liteline_app/features/chat/widgets/message_input.dart';
@@ -69,7 +69,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (widget.chat.chatId.isEmpty) return; // Ensure chatId is not empty
 
     final List<Map<String, dynamic>> messageMaps =
-        await _dbHelper.getMessages(widget.chat.chatId);
+        await _dbHelper.getMessages(widget.chat.id!);
     setState(() {
       _messages = messageMaps.map((map) => MessageModel.fromMap(map)).toList();
     });
@@ -152,7 +152,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     );
 
     if (confirmed == true) {
-      await _dbHelper.deleteMessages(_selectedMessageIds.toList());
+await _dbHelper.deleteMessagesByIds(_selectedMessageIds.map(int.parse).toList());
       setState(() {
         _selectedMessageIds.clear();
         _isMultiSelectMode = false;

@@ -39,7 +39,7 @@ class AuthService {
       final userData = {
         'username': username,
         'email': email,
-        'password': hashedPassword,
+        'password_hash': hashedPassword, // Menggunakan password_hash sesuai dengan schema database
         'display_name': displayName,
         'phone_number': phoneNumber,
         'status_message': 'Hey there! I am using LiteLine.',
@@ -71,7 +71,8 @@ class AuthService {
       }
       
       final hashedPassword = _hashPassword(password);
-      if (user['password'] != hashedPassword) {
+      // Menggunakan password_hash sesuai dengan schema database
+      if (user['password_hash'] != hashedPassword) {
         return {'success': false, 'message': 'Invalid password'};
       }
       
@@ -118,6 +119,95 @@ class AuthService {
       };
     }
     return null;
+  }
+  
+  // Get current user full data
+  Future<Map<String, dynamic>?> getCurrentUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    
+    if (userId != null) {
+      return await _dbHelper.getUserById(userId);
+    }
+    return null;
+  }
+  
+  // Update user profile
+  Future<Map<String, dynamic>> updateProfile({
+    required int userId,
+    String? displayName,
+    String? email,
+    String? phoneNumber,
+    String? statusMessage,
+    String? profilePictureUrl,
+  }) async {
+    try {
+      final db = await _dbHelper.database;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      
+      Map<String, dynamic> updateData = {
+        'updated_at': now,
+      };
+      
+      if (displayName != null) updateData['display_name'] = displayName;
+      if (email != null) updateData['email'] = email;
+      if (phoneNumber != null) updateData['phone_number'] = phoneNumber;
+      if (statusMessage != null) updateData['status_message'] = statusMessage;
+      if (profilePictureUrl != null) updateData['profile_picture_url'] = profilePictureUrl;
+      
+      await db.update(
+        'users',
+        updateData,
+        where: 'id = ?',
+        whereArgs: [userId],
+      );
+      
+      // Update session if display name changed
+      if (displayName != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('display_name', displayName);
+      }
+      
+      return {'success': true, 'message': 'Profile updated successfully'};
+    } catch (e) {
+      return {'success': false, 'message': 'Failed to update profile: $e'};
+    }
+  }
+  
+  // Change password
+  Future<Map<String, dynamic>> changePassword({
+    required int userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = await _dbHelper.getUserById(userId);
+      if (user == null) {
+        return {'success': false, 'message': 'User not found'};
+      }
+      
+      final hashedCurrentPassword = _hashPassword(currentPassword);
+      if (user['password_hash'] != hashedCurrentPassword) {
+        return {'success': false, 'message': 'Current password is incorrect'};
+      }
+      
+      final hashedNewPassword = _hashPassword(newPassword);
+      final db = await _dbHelper.database;
+      
+      await db.update(
+        'users',
+        {
+          'password_hash': hashedNewPassword,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [userId],
+      );
+      
+      return {'success': true, 'message': 'Password changed successfully'};
+    } catch (e) {
+      return {'success': false, 'message': 'Failed to change password: $e'};
+    }
   }
   
   // Logout
